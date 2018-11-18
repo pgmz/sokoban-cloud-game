@@ -1,0 +1,11 @@
+{
+  "lambda": {
+    "role": "sokoban-cloud-board-executor",
+    "name": "sokoban-cloud-board",
+    "region": "us-east-1"
+  },
+  "api": {
+    "id": "vls7dvxl8f",
+    "module": "index"
+  }
+}
