@@ -63,4 +63,23 @@ api.get('/start', function(request){
 },
 { cognitoAuthorizer: 'cognitoAuth' })
 
+
+api.post('/clear', function(request){
+
+  //Create a new board for this player! by it's me...
+  var params = {
+    TableName: "serverless-test",
+    Key : {
+      testId: request.context.authorizer.claims['cognito:username']+"-board"
+      }
+   };
+
+  return dynamoDb.delete(params).promise().then(response => {
+      return response;
+  })
+
+},
+{ cognitoAuthorizer: 'cognitoAuth' });
+
+
 module.exports = api;
