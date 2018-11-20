@@ -37,19 +37,29 @@ api.get('/start', function(request){
   },
   { cognitoAuthorizer: 'cognitoAuth' });
 
-  api.get('/start/new', function(request){
+  api.get('/start/new/{level}', function(request){
 
-    var new_board = {"Game":false,"Board":{"Player":{"Sprite":"Right","PositionX":3,"PositionY":3},"Boxes":[{"Sprite":"0","PositionX":1,"PositionY":1},{"Sprite":"1","PositionX":5,"PositionY":5}],"Marker":[{"Sprite":"0","PositionX":0,"PositionY":0},{"Sprite":"0","PositionX":5,"PositionY":6}]}}
-
-    var params = {
-      TableName: "serverless-test",
-      Item : {
-        testId: request.context.authorizer.claims['cognito:username']+"-board",
-        name: JSON.stringify(new_board)
+    //get the desired level
+    var getparams = {
+      TableName: "sokoban-level",
+      Key : {
+        level: request.pathParams.level
       }
      };
 
-     return dynamoDb.put(params).promise(); // returns dynamo result 
+     return dynamoDb.get(getparams).promise().then(response => {
+
+      var params = {
+        TableName: "serverless-test",
+        Item : {
+          testId: request.context.authorizer.claims['cognito:username']+"-board",
+          name: JSON.stringify({"Game" : false, "Board" : JSON.parse(response.Item.board).Board, "Movements" : 0, "Points" : 0})
+        }
+       };
+        return dynamoDb.put(params).promise().then(function(response){
+          return params.name;
+        }); // returns dynamo result 
+     }); // returns dynamo result 
 },
 { cognitoAuthorizer: 'cognitoAuth' })
 
