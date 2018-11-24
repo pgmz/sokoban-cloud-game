@@ -2,6 +2,7 @@ const ApiBuilder = require('claudia-api-builder'),
 AWS = require('aws-sdk');
 var api = new ApiBuilder(),
 dynamoDb = new AWS.DynamoDB.DocumentClient();
+const gameLogic = require('./game-logic');
 
 api.registerAuthorizer('cognitoAuth', {
     providerARNs: ['arn:aws:cognito-idp:us-east-1:914985308346:userpool/us-east-1_Xxsmk7ZLQ']
@@ -76,6 +77,40 @@ api.post('/clear', function(request){
 
   return dynamoDb.delete(params).promise().then(response => {
       return response;
+  })
+
+},
+{ cognitoAuthorizer: 'cognitoAuth' });
+
+api.get('/move/{action}', function (request) {
+
+  var action = request.pathParams.action;
+  //Let me get your state...
+  var params = {
+    TableName: "serverless-test",
+    Key : {
+      testId: request.context.authorizer.claims['cognito:username']+"-board"
+    }
+   };
+
+  return dynamoDb.get(params).promise().then(response => {
+    //TODO validations
+    var new_board = gameLogic.updateGame(JSON.parse(response.Item.name), action);
+
+    var paramsChanged = {
+      TableName: "serverless-test",
+      Item : {
+        testId: request.context.authorizer.claims['cognito:username']+"-board",
+        name: JSON.stringify(new_board)
+      }
+    };
+
+    return dynamoDb.put(paramsChanged).promise().then(response => {
+      return new_board;
+    });
+  },
+  err => {
+    return err + "Un error";
   })
 
 },
