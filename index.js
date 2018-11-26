@@ -116,5 +116,21 @@ api.get('/move/{action}', function (request) {
 },
 { cognitoAuthorizer: 'cognitoAuth' });
 
+api.post('/score', function (request) {
+
+  var params = {
+    TableName: "sokoban-leaderboard",
+    Item : {
+      username: request.context.authorizer.claims['cognito:username'],
+      level: request.body.Level,
+      score : request.body.Score
+    }
+  };
+
+  return dynamoDb.put(params).promise().then(response => {
+    return response;
+  });
+},
+{ cognitoAuthorizer: 'cognitoAuth' });
 
 module.exports = api;
