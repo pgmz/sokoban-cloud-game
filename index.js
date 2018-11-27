@@ -117,17 +117,54 @@ api.get('/move/{action}', function (request) {
 { cognitoAuthorizer: 'cognitoAuth' });
 
 api.post('/score', function (request) {
+  
+  var valueJSON = {
+    Score : request.body.Score,
+    Movements : request.body.Movements,
+    Timestamp : request.body.Timestamp
+  };
 
   var params = {
     TableName: "sokoban-leaderboard",
     Item : {
       username: request.context.authorizer.claims['cognito:username'],
       level: request.body.Level,
-      score : request.body.Score
+      value : JSON.stringify(valueJSON)
     }
   };
 
   return dynamoDb.put(params).promise().then(response => {
+    return response;
+  });
+},
+{ cognitoAuthorizer: 'cognitoAuth' });
+
+api.get('/score', function (request) {
+
+  var params = {
+    TableName: "sokoban-leaderboard",
+    FilterExpression: 'username = :user',
+    ExpressionAttributeValues: {
+      ':user': request.context.authorizer.claims['cognito:username']
+    }
+  };
+
+  return dynamoDb.scan(params).promise().then(response => {
+    return response;
+  });
+},
+{ cognitoAuthorizer: 'cognitoAuth' });
+
+api.get('/score/{level}', function (request) {
+
+  var params = {
+    TableName: "sokoban-leaderboard",
+    Key : {
+      username: request.context.authorizer.claims['cognito:username'],
+      level: request.pathParams.level
+    }
+  };
+  return dynamoDb.get(params).promise().then(response => {
     return response;
   });
 },
