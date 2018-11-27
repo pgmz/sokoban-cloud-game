@@ -125,7 +125,7 @@ api.post('/score', function (request) {
   };
 
   var params = {
-    TableName: "sokoban-leaderboard",
+    TableName: "sokoban-score",
     Item : {
       username: request.context.authorizer.claims['cognito:username'],
       level: request.body.Level,
@@ -142,7 +142,7 @@ api.post('/score', function (request) {
 api.get('/score', function (request) {
 
   var params = {
-    TableName: "sokoban-leaderboard",
+    TableName: "sokoban-score",
     FilterExpression: 'username = :user',
     ExpressionAttributeValues: {
       ':user': request.context.authorizer.claims['cognito:username']
@@ -158,10 +158,56 @@ api.get('/score', function (request) {
 api.get('/score/{level}', function (request) {
 
   var params = {
-    TableName: "sokoban-leaderboard",
+    TableName: "sokoban-score",
     Key : {
       username: request.context.authorizer.claims['cognito:username'],
       level: request.pathParams.level
+    }
+  };
+  return dynamoDb.get(params).promise().then(response => {
+    return response;
+  });
+},
+{ cognitoAuthorizer: 'cognitoAuth' });
+
+api.get('/leaderboard', function (request) {
+
+  var params = {
+    TableName: "sokoban-leaderboard",
+    FilterExpression: 'username = :user',
+    ExpressionAttributeValues: {
+      ':user': request.context.authorizer.claims['cognito:username']
+    }
+  };
+
+  return dynamoDb.scan(params).promise().then(response => {
+    return response;
+  });
+},
+{ cognitoAuthorizer: 'cognitoAuth' });
+
+api.get('/leaderboard/{level}', function (request) {
+
+  var params = {
+    TableName: "sokoban-leaderboard",
+    Key : {
+      level: request.pathParams.level
+    }
+  };
+  return dynamoDb.get(params).promise().then(response => {
+    return response;
+  });
+},
+{ cognitoAuthorizer: 'cognitoAuth' });
+
+api.post('/leaderboard', function (request) {
+
+  var params = {
+    TableName: "sokoban-leaderboard",
+    Item : {
+      score: request.body.Score,
+      level: request.body.level,
+      username: request.context.authorizer.claims['cognito:username']
     }
   };
   return dynamoDb.get(params).promise().then(response => {
